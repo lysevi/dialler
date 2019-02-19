@@ -11,33 +11,32 @@
 #include <string>
 #include <thread>
 
-using namespace dialler;
-
 namespace {
 
-struct Listener : public abstract_listener_consumer {
-  bool on_new_connection(listener_client_ptr) override {
+struct Listener : public dialler::abstract_listener_consumer {
+  bool on_new_connection(dialler::listener_client_ptr) override {
     connections.fetch_add(1);
     return true;
   }
 
-  void on_network_error(listener_client_ptr i, const message_ptr & /*d*/,
+  void on_network_error(dialler::listener_client_ptr i,
+                        const dialler::message_ptr & /*d*/,
                         const boost::system::error_code & /*err*/) override {}
 
-  void on_new_message(listener_client_ptr i, message_ptr && /*d*/,
+  void on_new_message(dialler::listener_client_ptr i, dialler::message_ptr && /*d*/,
                       bool & /*cancel*/) override {}
 
-  void on_disconnect(const listener_client_ptr & /*i*/) override {
+  void on_disconnect(const dialler::listener_client_ptr & /*i*/) override {
     connections.fetch_sub(1);
   }
 
   std::atomic_int16_t connections = 0;
 };
 
-struct Connection : public abstract_dial {
+struct Connection : public dialler::abstract_dial {
   void on_connect() override { mock_is_connected = true; };
-  void on_new_message(message_ptr &&, bool &) override {}
-  void on_network_error(const message_ptr &,
+  void on_new_message(dialler::message_ptr &&, bool &) override {}
+  void on_network_error(const dialler::message_ptr &,
                         const boost::system::error_code &err) override {
     bool isError = err == boost::asio::error::operation_aborted ||
                    err == boost::asio::error::connection_reset ||
@@ -53,16 +52,16 @@ struct Connection : public abstract_dial {
 };
 
 bool server_stop = false;
-std::shared_ptr<listener> server = nullptr;
+std::shared_ptr<dialler::listener> server = nullptr;
 std::shared_ptr<Listener> lstnr = nullptr;
 boost::asio::io_service *service;
 
 void server_thread() {
-  listener::params_t p;
+  dialler::listener::params_t p;
   p.port = 4040;
   service = new boost::asio::io_service();
 
-  server = std::make_shared<listener>(service, p);
+  server = std::make_shared<dialler::listener>(service, p);
   lstnr = std::make_shared<Listener>();
   server->add_consumer(lstnr.get());
 
@@ -83,7 +82,7 @@ void server_thread() {
 
 TEST_CASE("listener.client", "[network]") {
   size_t clients_count = 0;
-  dial::params_t p("localhost", 4040);
+  dialler::dial::params_t p("localhost", 4040);
 
   SECTION("listener.client: 1") { clients_count = 1; }
   SECTION("listener.client: 10") { clients_count = 10; }
@@ -94,10 +93,10 @@ TEST_CASE("listener.client", "[network]") {
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
   }
 
-  std::vector<std::shared_ptr<dial>> clients(clients_count);
+  std::vector<std::shared_ptr<dialler::dial>> clients(clients_count);
   std::vector<std::shared_ptr<Connection>> consumers(clients_count);
   for (size_t i = 0; i < clients_count; i++) {
-    clients[i] = std::make_shared<dial>(service, p);
+    clients[i] = std::make_shared<dialler::dial>(service, p);
     consumers[i] = std::make_shared<Connection>();
     clients[i]->add_consumer(consumers[i].get());
     clients[i]->start_async_connection();
