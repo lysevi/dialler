@@ -49,8 +49,6 @@ else()
 ENDIF()
 
 IF(Boost_FOUND)
-  INCLUDE_DIRECTORIES(${Boost_INCLUDE_DIRS})
-  LINK_DIRECTORIES(${Boost_LIBRARY_DIRS})
   SET(dialler_LIB_PATH ${Boost_LIBRARY_DIRS}
               CACHE STRING "dialler libs path.")
 else()	
@@ -69,8 +67,7 @@ if(dialler_ENABLE_TESTS)
 endif(dialler_ENABLE_TESTS)
 
 #########
-
-SET(DIALLER_INCLUDE_DIR  ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_BINARY_DIR} CACHE STRING "dialler include dir.")
+SET(DIALLER_INCLUDE_DIR ${Boost_INCLUDE_DIRS}  ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_BINARY_DIR} CACHE STRING "dialler include dir.")
 
 add_subdirectory(libdialler)
 

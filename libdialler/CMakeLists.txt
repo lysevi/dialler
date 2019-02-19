@@ -1,9 +1,6 @@
 include(GenerateExportHeader)
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/../cmake/config.h.cmake ${CMAKE_CURRENT_SOURCE_DIR}/config.h)
 
-
-MESSAGE(${DIALLER_INCLUDE_DIR})
-
 FILE(GLOB GLOB_HDRS "*.h")
 FILE(GLOB GLOB_SRC "*.cpp")
 
@@ -12,9 +9,8 @@ source_group(\\ FILES ${GLOB_HDRS} ${GLOB_SRC})
 SET(SRC ${GLOB_HDRS} ${GLOB_SRC})
 
 SET(DIALLER_LIBS dialler ${Boost_LIBRARIES} CACHE STRING "dialler libs.")
-
 add_library(dialler ${SRC})
-target_INCLUDE_DIRECTORIES(dialler PUBLIC ${DIALLER_INCLUDE_DIR})
+target_INCLUDE_DIRECTORIES(dialler PUBLIC ${Boost_INCLUDE_DIRS} ${DIALLER_INCLUDE_DIR})
 
 IF(WIN32)
  target_link_libraries(dialler wsock32 ws2_32 ${Boost_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
