@@ -21,11 +21,9 @@ MESSAGE(STATUS "dialler_ENABLE_TESTS - " ${dialler_ENABLE_TESTS})
 MESSAGE(STATUS "dialler_ASIO_DEBUG - " ${dialler_ASIO_DEBUG})
 
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
-list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/cotire/CMake")
 
 include(AddCXXCompilerFlag)
 include(CompillerSettings)
-include(cotire)
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
@@ -67,12 +65,12 @@ find_package (Threads)
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
 if(dialler_ENABLE_TESTS)
-   include_directories(extern/Catch2/single_include/catch2/)
+   set (DIALLER_TEST_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/extern/Catch2/)
 endif(dialler_ENABLE_TESTS)
 
 #########
 
-SET(DIALLER_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_BINARY_DIR} CACHE STRING "dialler include dir.")
+SET(DIALLER_INCLUDE_DIR  ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_BINARY_DIR} CACHE STRING "dialler include dir.")
 
 add_subdirectory(libdialler)
 
