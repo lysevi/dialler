@@ -8,15 +8,12 @@ source_group(\\ FILES ${GLOB_HDRS} ${GLOB_SRC})
 
 SET(SRC ${GLOB_HDRS} ${GLOB_SRC})
 
-SET(DIALLER_LIBS dialler ${Boost_LIBRARIES} CACHE STRING "dialler libs.")
-add_library(dialler ${SRC})
-target_INCLUDE_DIRECTORIES(dialler PUBLIC ${Boost_INCLUDE_DIRS} ${DIALLER_INCLUDE_DIR})
+add_library(dialler  SHARED ${SRC})
+target_INCLUDE_DIRECTORIES(dialler PUBLIC ${DIALLER_INCLUDE_DIR})
+target_link_libraries(dialler PUBLIC ${DIALLER_PRIVATE_LIBRARIES})
+target_link_directories(dialler PUBLIC ${DIALLER_LIBRARY_DIR})
 
-IF(WIN32)
- target_link_libraries(dialler wsock32 ws2_32 ${Boost_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
-else()
- TARGET_LINK_LIBRARIES(dialler PUBLIC ${Boost_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT})
-endif()
+SET(DIALLER_LIBRARIES ${DIALLER_PRIVATE_LIBRARIES}  CACHE STRING "dialler libraries.")
 
 GENERATE_EXPORT_HEADER(dialler
     BASE_NAME dialler

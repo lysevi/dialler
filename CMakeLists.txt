@@ -49,8 +49,6 @@ else()
 ENDIF()
 
 IF(Boost_FOUND)
-  SET(dialler_LIB_PATH ${Boost_LIBRARY_DIRS}
-              CACHE STRING "dialler libs path.")
 else()	
   MESSAGE(FATAL_ERROR "boost not found")
   EXIT()
@@ -67,7 +65,16 @@ if(dialler_ENABLE_TESTS)
 endif(dialler_ENABLE_TESTS)
 
 #########
-SET(DIALLER_INCLUDE_DIR ${Boost_INCLUDE_DIRS}  ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_BINARY_DIR} CACHE STRING "dialler include dir.")
+SET(DIALLER_LIBRARY_DIR ${Boost_LIBRARY_DIRS} CACHE STRING "dialler lib dir.")
+SET(DIALLER_INCLUDE_DIR   ${Boost_INCLUDE_DIRS} ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_BINARY_DIR} CACHE STRING "dialler include dir.")
+
+
+IF(WIN32)
+ SET(DIALLER_PRIVATE_LIBRARIES  ${Boost_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT} wsock32 ws2_32 CACHE STRING "dialler libraries.")
+else()
+  SET(DIALLER_PRIVATE_LIBRARIES ${Boost_LIBRARIES} ${CMAKE_THREAD_LIBS_INIT} CACHE STRING "dialler libraries.")
+endif()
+
 
 add_subdirectory(libdialler)
 
