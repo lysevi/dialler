@@ -28,7 +28,7 @@ private:
 };
 using abstract_connection_consumer_ptr = abstract_dial *;
 
-class dial : public std::enable_shared_from_this<dial>,
+class dial final : public std::enable_shared_from_this<dial>,
                    public initialized_resource {
 public:
   struct params_t {

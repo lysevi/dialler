@@ -9,7 +9,7 @@
 
 namespace dialler {
 
-class async_io : public std::enable_shared_from_this<async_io> {
+class async_io final : public std::enable_shared_from_this<async_io> {
 public:
   /// if method set 'cancel' to true, then read loop stoping.
   /// if dont_free_memory, then free NetData_ptr is in client side.

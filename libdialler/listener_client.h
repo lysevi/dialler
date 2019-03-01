@@ -1,7 +1,7 @@
 #pragma once
 
-#include <libdialler/exports.h>
 #include <libdialler/async_io.h>
+#include <libdialler/exports.h>
 #include <libdialler/initialized_resource.h>
 #include <atomic>
 #include <mutex>
@@ -9,8 +9,8 @@
 namespace dialler {
 
 class listener;
-class listener_client : public std::enable_shared_from_this<listener_client>,
-                       public initialized_resource {
+class listener_client final : public std::enable_shared_from_this<listener_client>,
+                              public initialized_resource {
 public:
   listener_client(uint64_t id_, async_io_ptr async_io, std::shared_ptr<listener> s);
   ~listener_client();

@@ -33,8 +33,8 @@ private:
 
 using abstract_listener_consumer_ptr = abstract_listener_consumer *;
 
-class listener : public std::enable_shared_from_this<listener>,
-                 public initialized_resource {
+class listener final : public std::enable_shared_from_this<listener>,
+                       public initialized_resource {
 public:
   struct params_t {
     unsigned short port;
@@ -67,8 +67,7 @@ protected:
 private:
   void start_async_accept(async_io_ptr aio);
 
-  EXPORT static void OnAcceptHandler(std::shared_ptr<listener> self,
-                                     async_io_ptr aio,
+  EXPORT static void OnAcceptHandler(std::shared_ptr<listener> self, async_io_ptr aio,
                                      const boost::system::error_code &err);
 
 protected:

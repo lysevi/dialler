@@ -13,7 +13,7 @@
 
 namespace {
 
-struct Listener : public dialler::abstract_listener_consumer {
+struct Listener final : public dialler::abstract_listener_consumer {
   bool on_new_connection(dialler::listener_client_ptr) override {
     connections.fetch_add(1);
     return true;
@@ -33,7 +33,7 @@ struct Listener : public dialler::abstract_listener_consumer {
   std::atomic_int16_t connections = 0;
 };
 
-struct Connection : public dialler::abstract_dial {
+struct Connection final : public dialler::abstract_dial {
   void on_connect() override { mock_is_connected = true; };
   void on_new_message(dialler::message_ptr &&, bool &) override {}
   void on_network_error(const dialler::message_ptr &,
