@@ -112,7 +112,7 @@ void async_io::readNextAsync() {
     }
   };
 
-  auto on_read_size = [this, self, on_read_message](auto err, auto read_bytes) {
+  auto on_read_size = [self, on_read_message](auto err, auto read_bytes) {
     if (err) {
       self->_on_error_handler(nullptr, err);
     } else {

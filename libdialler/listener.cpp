@@ -28,7 +28,7 @@ void abstract_listener_consumer::stop() {
 }
 
 listener::listener(boost::asio::io_service *service, listener::params_t p)
-    : _service(service), _params(p), _consumer() {
+    : _service(service), _consumer(), _params(p) {
   _next_id.store(0);
 }
 

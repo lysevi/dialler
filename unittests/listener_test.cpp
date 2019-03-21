@@ -14,23 +14,24 @@
 namespace {
 
 struct Listener final : public dialler::abstract_listener_consumer {
+  Listener() { connections.store(0); }
   bool on_new_connection(dialler::listener_client_ptr) override {
     connections.fetch_add(1);
     return true;
   }
 
-  void on_network_error(dialler::listener_client_ptr i,
+  void on_network_error(dialler::listener_client_ptr /*i*/,
                         const dialler::message_ptr & /*d*/,
                         const boost::system::error_code & /*err*/) override {}
 
-  void on_new_message(dialler::listener_client_ptr i, dialler::message_ptr && /*d*/,
+  void on_new_message(dialler::listener_client_ptr /*i*/, dialler::message_ptr && /*d*/,
                       bool & /*cancel*/) override {}
 
   void on_disconnect(const dialler::listener_client_ptr & /*i*/) override {
     connections.fetch_sub(1);
   }
 
-  std::atomic_int16_t connections = 0;
+  std::atomic_int16_t connections;
 };
 
 struct Connection final : public dialler::abstract_dial {
@@ -109,8 +110,7 @@ TEST_CASE("listener.client", "[network]") {
     }
   }
 
-  while (!lstnr->is_started() && lstnr->connections != clients_count) {
-
+  while (!lstnr->is_started() && size_t(lstnr->connections.load()) != clients_count) {
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
   }
 
