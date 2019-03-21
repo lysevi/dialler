@@ -1,5 +1,9 @@
 [requires]
 boost/1.69.0@conan/stable
+Catch2/2.6.0@catchorg/stable
+
+[options]
+boost:shared=True
 
 [generators]
 cmake

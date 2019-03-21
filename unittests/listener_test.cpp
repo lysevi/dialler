@@ -5,7 +5,7 @@
 #include <libdialler/dialler.h>
 #include <libdialler/listener.h>
 
-#include <catch.hpp>
+#include <catch2/catch.hpp>
 
 #include <functional>
 #include <string>
