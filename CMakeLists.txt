@@ -2,10 +2,22 @@ cmake_minimum_required (VERSION 3.1)
 set(PROJECT "dialler")
 project (${PROJECT} VERSION 0.0.1)
 
-set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
+if (WIN32)
+	add_definitions(-D_WIN32_WINNT=0x0601)
+	add_definitions(-D_SILENCE_CXX17_CODECVT_HEADER_DEPRECATION_WARNING)
+	add_definitions(-D_SILENCE_CXX17_ALLOCATOR_VOID_DEPRECATION_WARNING)
+endif ()
+
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+add_definitions(-DBOOST_ASIO_NO_DEPRECATED)
+
+include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
+conan_basic_setup()
+ 
 IF(NOT CMAKE_BUILD_TYPE)
         message(STATUS "CMAKE_BUILD_TYPE is not set, set to default = RELWITHDEBINFO")
         SET(CMAKE_BUILD_TYPE "RELWITHDEBINFO")
@@ -35,18 +47,16 @@ IF(dialler_ASIO_DEBUG)
 ENDIF()
 
 ########## BOOST
-set(BOOST_DEP system date_time)
+IF(NOT HEADER_ONLY)
+    list(FIND CONAN_DEFINES_BOOST "-DBOOST_USE_STATIC_LIBS" IS_STATIC)
+    if(${IS_STATIC} GREATER -1)
+        set(Boost_USE_STATIC_LIBS ON)
+    else()
+        set(Boost_USE_STATIC_LIBS OFF)
+	endif()
+endif()
 
-set(Boost_USE_STATIC_LIBS OFF)
-set(Boost_USE_MULTITHREADED ON)  
-set(Boost_USE_STATIC_RUNTIME OFF) 
-
-IF(WIN32 AND MSVC)
-  find_package(Boost 1.60.0 COMPONENTS ${BOOST_DEP} REQUIRED)
-else()
-  set(BOOST_DEP ${BOOST_DEP})
-  find_package(Boost  REQUIRED ${BOOST_DEP})
-ENDIF()
+find_package(Boost 1.69.0 COMPONENTS system date_time REQUIRED)
 
 IF(Boost_FOUND)
 else()	
@@ -59,10 +69,6 @@ find_package (Threads)
 
 ##### MISC
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
-
-if(dialler_ENABLE_TESTS)
-   set (DIALLER_TEST_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/extern/Catch2/)
-endif(dialler_ENABLE_TESTS)
 
 #########
 SET(DIALLER_LIBRARY_DIR ${Boost_LIBRARY_DIRS})

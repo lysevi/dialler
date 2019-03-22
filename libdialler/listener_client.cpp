@@ -9,9 +9,11 @@ using namespace boost::asio::ip;
 
 using namespace dialler;
 
-listener_client::listener_client(uint64_t id_, async_io_ptr async_io,
-                               std::shared_ptr<listener> s)
-    : id(id_), _listener(s) {
+listener_client::listener_client(uint64_t id_,
+                                 async_io_ptr async_io,
+                                 std::shared_ptr<listener> s)
+    : id(id_)
+    , _listener(s) {
   _async_connection = async_io;
 }
 
@@ -46,7 +48,7 @@ void listener_client::close() {
 }
 
 void listener_client::on_network_error(const message_ptr &d,
-                                    const boost::system::error_code &err) {
+                                       const boost::system::error_code &err) {
   this->_listener->on_network_error(this->shared_from_this(), d, err);
 }
 
