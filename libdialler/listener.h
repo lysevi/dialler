@@ -42,7 +42,7 @@ public:
   listener() = delete;
   listener(const listener &) = delete;
 
-  EXPORT listener(boost::asio::io_service *service, params_t p);
+  EXPORT listener(boost::asio::io_context *service, params_t p);
   EXPORT virtual ~listener();
   EXPORT void start();
   EXPORT void stop();
@@ -50,7 +50,7 @@ public:
   EXPORT void send_to(listener_client_ptr i, message_ptr &d);
   EXPORT void send_to(uint64_t id, message_ptr &d);
 
-  EXPORT boost::asio::io_service *service() const { return _service; }
+  EXPORT boost::asio::io_context *service() const { return _service; }
 
   EXPORT void erase_client_description(const listener_client_ptr client);
   EXPORT void add_consumer(const abstract_listener_consumer_ptr &c);
@@ -71,7 +71,7 @@ private:
                                      const boost::system::error_code &err);
 
 protected:
-  boost::asio::io_service *_service = nullptr;
+  boost::asio::io_context *_service = nullptr;
   std::shared_ptr<boost::asio::ip::tcp::acceptor> _acc = nullptr;
   std::atomic_int _next_id;
 

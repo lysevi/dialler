@@ -20,8 +20,8 @@ void abstract_dial::add_connection(std::shared_ptr<dial> c) {
   _connection = c;
 }
 
-dial::dial(boost::asio::io_service *service, const params_t &params)
-    :_service(service), _params(params), _consumers() {}
+dial::dial(boost::asio::io_context *service, const params_t &params)
+    : _service(service), _params(params), _consumers() {}
 
 dial::~dial() {
   disconnect();
@@ -35,8 +35,7 @@ void dial::disconnect() {
   }
 }
 
-void dial::reconnecton_error(const message_ptr &d,
-                                const boost::system::error_code &err) {
+void dial::reconnecton_error(const message_ptr &d, const boost::system::error_code &err) {
 
   {
     if (_consumers != nullptr) {
@@ -56,26 +55,12 @@ void dial::start_async_connection() {
 
   using namespace boost::asio::ip;
   tcp::resolver resolver(*_service);
-  tcp::resolver::query query(_params.host, std::to_string(_params.port),
-                             tcp::resolver::query::canonical_name);
-  tcp::resolver::iterator iter = resolver.resolve(query);
+  auto const results = resolver.resolve(_params.host, std::to_string(_params.port));
 
-  for (; iter != tcp::resolver::iterator(); ++iter) {
-    auto ep = iter->endpoint();
-    if (ep.protocol() == tcp::v4()) {
-      break;
-    }
-  }
-
-  if (iter == tcp::resolver::iterator()) {
-    throw std::logic_error("hostname not found.");
-  }
-
-  tcp::endpoint ep = *iter;
-  
   auto self = this->shared_from_this();
   self->_async_io = std::make_shared<async_io>(self->_service);
-  self->_async_io->socket().async_connect(ep, [self](auto ec) {
+
+  auto con_handler = [self](auto ec, auto resoler_ir) {
     if (ec) {
       if (!self->is_stoped()) {
         self->reconnecton_error(nullptr, ec);
@@ -98,7 +83,10 @@ void dial::start_async_connection() {
         self->initialisation_complete();
       }
     }
-  });
+  };
+
+  boost::asio::async_connect(self->_async_io->socket(), results.begin(), results.end(),
+                             con_handler);
 }
 
 void dial::on_data_receive(message_ptr &&d, bool &cancel) {

@@ -55,12 +55,12 @@ struct Connection final : public dialler::abstract_dial {
 bool server_stop = false;
 std::shared_ptr<dialler::listener> server = nullptr;
 std::shared_ptr<Listener> lstnr = nullptr;
-boost::asio::io_service *service;
+boost::asio::io_context *service;
 
 void server_thread() {
   dialler::listener::params_t p;
   p.port = 4040;
-  service = new boost::asio::io_service();
+  service = new boost::asio::io_context();
 
   server = std::make_shared<dialler::listener>(service, p);
   lstnr = std::make_shared<Listener>();

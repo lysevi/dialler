@@ -46,7 +46,7 @@ public:
   dial() = delete;
   params_t get_params() const { return _params; }
 
-  EXPORT dial(boost::asio::io_service *service, const params_t &_parms);
+  EXPORT dial(boost::asio::io_context *service, const params_t &_parms);
   EXPORT virtual ~dial();
   EXPORT void disconnect();
   EXPORT void start_async_connection();
@@ -60,7 +60,7 @@ public:
 
 protected:
   std::shared_ptr<async_io> _async_io = nullptr;
-  boost::asio::io_service *_service = nullptr;
+  boost::asio::io_context *_service = nullptr;
   params_t _params;
 
   abstract_connection_consumer_ptr _consumers;

@@ -6,7 +6,7 @@
 using namespace boost::asio;
 using namespace dialler;
 
-async_io::async_io(boost::asio::io_service *service)
+async_io::async_io(boost::asio::io_context *service)
     : _sock(*service), next_message_size(0) {
   _messages_to_send = 0;
   _is_stoped = true;
@@ -36,7 +36,8 @@ void async_io::fullStop(bool waitAllmessages) {
     if (_sock.is_open()) {
       if (waitAllmessages && _messages_to_send.load() != 0) {
         auto self = this->shared_from_this();
-        _service->post([self]() { self->fullStop(); });
+		boost::asio::post(_service->get_executor(), [self]() { self->fullStop(); });
+        //_service->post([self]() { self->fullStop(); });
       } else {
         boost::system::error_code ec;
         _sock.shutdown(boost::asio::ip::tcp::socket::shutdown_both, ec);
