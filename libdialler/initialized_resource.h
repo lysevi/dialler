@@ -12,7 +12,8 @@ public:
   long_process() = delete;
 
   long_process(const std::string &name, bool checkOnDtor_)
-      : _name(name), checkOnDtor(checkOnDtor_) {
+      : _name(name)
+      , checkOnDtor(checkOnDtor_) {
     _started.store(false);
     _complete.store(false);
   }
@@ -66,7 +67,9 @@ private:
 };
 
 struct initialized_resource {
-  initialized_resource() : starting("starting", false), stoping("stoping", true) {}
+  initialized_resource()
+      : starting("starting", false)
+      , stoping("stoping", true) {}
 
   ~initialized_resource() {
     if (!is_stoped()) {

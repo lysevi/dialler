@@ -14,10 +14,10 @@ public:
   /// if method set 'cancel' to true, then read loop stoping.
   /// if dont_free_memory, then free NetData_ptr is in client side.
   using data_handler_t = std::function<void(message_ptr &&d, bool &cancel)>;
-  using error_handler_t =
-      std::function<void(const message_ptr &d, const boost::system::error_code &err)>;
+  using error_handler_t
+      = std::function<void(const message_ptr &d, const boost::system::error_code &err)>;
 
-  EXPORT async_io(boost::asio::io_context *service);
+  EXPORT async_io(boost::asio::io_context *context);
   EXPORT ~async_io() noexcept;
   EXPORT void send(const message_ptr d);
   EXPORT void start(data_handler_t onRecv, error_handler_t onErr);
@@ -31,7 +31,7 @@ private:
 
 private:
   std::atomic_int _messages_to_send;
-  boost::asio::io_context *_service = nullptr;
+  boost::asio::io_context *_context = nullptr;
 
   boost::asio::ip::tcp::socket _sock;
 

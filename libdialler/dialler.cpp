@@ -20,8 +20,10 @@ void abstract_dial::add_connection(std::shared_ptr<dial> c) {
   _connection = c;
 }
 
-dial::dial(boost::asio::io_context *service, const params_t &params)
-    : _service(service), _params(params), _consumers() {}
+dial::dial(boost::asio::io_context *context, const params_t &params)
+    : _context(context)
+    , _params(params)
+    , _consumers() {}
 
 dial::~dial() {
   disconnect();
@@ -54,11 +56,11 @@ void dial::start_async_connection() {
   }
 
   using namespace boost::asio::ip;
-  tcp::resolver resolver(*_service);
+  tcp::resolver resolver(*_context);
   auto const results = resolver.resolve(_params.host, std::to_string(_params.port));
 
   auto self = this->shared_from_this();
-  self->_async_io = std::make_shared<async_io>(self->_service);
+  self->_async_io = std::make_shared<async_io>(self->_context);
 
   auto con_handler = [self](auto ec, auto resoler_ir) {
     if (ec) {
@@ -71,9 +73,8 @@ void dial::start_async_connection() {
         async_io::data_handler_t on_d = [self](auto d, auto cancel) {
           self->on_data_receive(std::move(d), cancel);
         };
-        async_io::error_handler_t on_n = [self](auto d, auto err) {
-          self->reconnecton_error(d, err);
-        };
+        async_io::error_handler_t on_n
+            = [self](auto d, auto err) { self->reconnecton_error(d, err); };
 
         self->_async_io->start(on_d, on_n);
 
@@ -85,8 +86,8 @@ void dial::start_async_connection() {
     }
   };
 
-  boost::asio::async_connect(self->_async_io->socket(), results.begin(), results.end(),
-                             con_handler);
+  boost::asio::async_connect(
+      self->_async_io->socket(), results.begin(), results.end(), con_handler);
 }
 
 void dial::on_data_receive(message_ptr &&d, bool &cancel) {

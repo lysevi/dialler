@@ -1,7 +1,7 @@
 #pragma once
 
-#include <libdialler/exports.h>
 #include <libdialler/async_io.h>
+#include <libdialler/exports.h>
 #include <libdialler/initialized_resource.h>
 #include <libdialler/message.h>
 #include <unordered_map>
@@ -15,7 +15,8 @@ public:
   virtual void on_connect() = 0;
   virtual void on_new_message(message_ptr &&d, bool &cancel) = 0;
   virtual void on_network_error(const message_ptr &d,
-                                const boost::system::error_code &err) = 0;
+                                const boost::system::error_code &err)
+      = 0;
 
   EXPORT bool is_connected() const;
   EXPORT bool is_stoped() const;
@@ -33,20 +34,22 @@ class dial final : public std::enable_shared_from_this<dial>,
 public:
   struct params_t {
     params_t(std::string host_, unsigned short port_, bool auto_reconnection_ = true)
-        : host(host_), port(port_), auto_reconnection(auto_reconnection_) {}
+        : host(host_)
+        , port(port_)
+        , auto_reconnection(auto_reconnection_) {}
     std::string host;
     unsigned short port;
     bool auto_reconnection = true;
 
     bool operator==(const params_t &other) const {
-      return host == other.host && port == other.port &&
-             auto_reconnection == other.auto_reconnection;
+      return host == other.host && port == other.port
+          && auto_reconnection == other.auto_reconnection;
     }
   };
   dial() = delete;
   params_t get_params() const { return _params; }
 
-  EXPORT dial(boost::asio::io_context *service, const params_t &_parms);
+  EXPORT dial(boost::asio::io_context *context, const params_t &_parms);
   EXPORT virtual ~dial();
   EXPORT void disconnect();
   EXPORT void start_async_connection();
@@ -60,7 +63,7 @@ public:
 
 protected:
   std::shared_ptr<async_io> _async_io = nullptr;
-  boost::asio::io_context *_service = nullptr;
+  boost::asio::io_context *_context = nullptr;
   params_t _params;
 
   abstract_connection_consumer_ptr _consumers;
@@ -69,7 +72,8 @@ protected:
 } // namespace dialler
 
 namespace std {
-template <> class hash<dialler::dial::params_t> {
+template <>
+class hash<dialler::dial::params_t> {
 public:
   size_t operator()(const dialler::dial::params_t &s) const {
     size_t h = std::hash<std::string>()(s.host);

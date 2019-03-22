@@ -27,8 +27,10 @@ void abstract_listener_consumer::stop() {
   _lstnr->stop();
 }
 
-listener::listener(boost::asio::io_context *service, listener::params_t p)
-    : _service(service), _consumer(), _params(p) {
+listener::listener(boost::asio::io_context *context, listener::params_t p)
+    : _context(context)
+    , _consumer()
+    , _params(p) {
   _next_id.store(0);
 }
 
@@ -39,8 +41,8 @@ listener::~listener() {
 void listener::start() {
   initialisation_begin();
   tcp::endpoint ep(tcp::v4(), _params.port);
-  auto aio = std::make_shared<async_io>(_service);
-  _acc = std::make_shared<boost::asio::ip::tcp::acceptor>(*_service, ep);
+  auto aio = std::make_shared<async_io>(_context);
+  _acc = std::make_shared<boost::asio::ip::tcp::acceptor>(*_context, ep);
 
   if (_consumer != nullptr) {
     _consumer->initialisation_begin();
@@ -61,14 +63,16 @@ void listener::start_async_accept(async_io_ptr aio) {
   }
 }
 
-void listener::OnAcceptHandler(std::shared_ptr<listener> self, async_io_ptr aio,
+void listener::OnAcceptHandler(std::shared_ptr<listener> self,
+                               async_io_ptr aio,
                                const boost::system::error_code &err) {
   if (self->is_stopping_started()) {
     return;
   }
   if (err) {
-    if (err == boost::asio::error::operation_aborted ||
-        err == boost::asio::error::connection_reset || err == boost::asio::error::eof) {
+    if (err == boost::asio::error::operation_aborted
+        || err == boost::asio::error::connection_reset
+        || err == boost::asio::error::eof) {
       aio->fullStop();
       return;
     } else {
@@ -97,8 +101,8 @@ void listener::OnAcceptHandler(std::shared_ptr<listener> self, async_io_ptr aio,
     }
   }
 
-  boost::asio::ip::tcp::socket new_sock(*self->_service);
-  auto newaio = std::make_shared<async_io>(self->_service);
+  boost::asio::ip::tcp::socket new_sock(*self->_context);
+  auto newaio = std::make_shared<async_io>(self->_context);
   if (self->is_stopping_started()) {
     return;
   }
@@ -109,7 +113,7 @@ void listener::stop() {
   if (!is_stoped()) {
     stopping_started();
 
-	if (_consumer != nullptr) {
+    if (_consumer != nullptr) {
       _consumer->stopping_started();
     }
 
@@ -135,8 +139,9 @@ void listener::stop() {
 
 void listener::erase_client_description(const listener_client_ptr client) {
   bool locked_localy = _locker_connections.try_lock();
-  auto it = std::find_if(_connections.cbegin(), _connections.cend(),
-                         [client](auto c) { return c->get_id() == client->get_id(); });
+  auto it = std::find_if(_connections.cbegin(), _connections.cend(), [client](auto c) {
+    return c->get_id() == client->get_id();
+  });
   if (it == _connections.cend()) {
     throw std::logic_error("delete error");
   }
@@ -174,15 +179,15 @@ void listener::erase_consumer() {
   _consumer = nullptr;
 }
 
-void listener::on_network_error(listener_client_ptr i, const message_ptr &d,
+void listener::on_network_error(listener_client_ptr i,
+                                const message_ptr &d,
                                 const boost::system::error_code &err) {
   if (_consumer != nullptr) {
     _consumer->on_network_error(i, d, err);
   }
 }
 
-void listener::on_new_message(listener_client_ptr i, message_ptr &&d,
-                              bool &cancel) {
+void listener::on_new_message(listener_client_ptr i, message_ptr &&d, bool &cancel) {
   if (_consumer != nullptr) {
     _consumer->on_new_message(i, std::move(d), cancel);
   }

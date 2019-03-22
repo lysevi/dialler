@@ -2,8 +2,8 @@
 
 #include <libdialler/exports.h>
 #include <array>
-#include <cstdint>
 #include <cassert>
+#include <cstdint>
 
 namespace dialler {
 struct buffer {
@@ -27,7 +27,8 @@ public:
   static const size_t SIZE_OF_HEADER = sizeof(header_t);
   static const size_t MAX_BUFFER_SIZE = MAX_MESSAGE_SIZE - SIZE_OF_HEADER;
 
-  message(const message &other) : data(other.data) {
+  message(const message &other)
+      : data(other.data) {
     size = (size_t *)data.data();
     *size = *other.size;
   }
@@ -40,7 +41,8 @@ public:
     *size = realSize;
   }
 
-  message(size_t sz, const kind_t &kind_) : message(sz) {
+  message(size_t sz, const kind_t &kind_)
+      : message(sz) {
     *size += SIZE_OF_HEADER;
     get_header()->kind = kind_;
   }
