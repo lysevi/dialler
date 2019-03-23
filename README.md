@@ -2,7 +2,7 @@
 
 boost::asio wrapper
 
-## build
+## building
 1. add conan repo
 ```sh
 $ conan remote add comunity https://api.bintray.com/conan/conan-community/conan 
@@ -14,7 +14,7 @@ $ cd build
 $ conan install ..
 $ cmake ..
 ```
-# Example
+## example
 
 ```C++
 
