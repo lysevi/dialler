@@ -18,34 +18,33 @@ $ cmake ..
 
 ```C++
 
-struct Listener : public dialler::abstract_listener_consumer {
+struct Listener final : public dialler::abstract_listener_consumer {
+  Listener() { connections.store(0); }
   bool on_new_connection(dialler::listener_client_ptr) override {
     connections.fetch_add(1);
     return true;
   }
 
-  void on_network_error(dialler::listener_client_ptr i,
-                        const dialler::message_ptr & /*d*/,
+  void on_network_error(dialler::listener_client_ptr /*i*/,
                         const boost::system::error_code & /*err*/) override {}
 
-  void on_new_message(dialler::listener_client_ptr i, dialler::message_ptr && /*d*/,
+  void on_new_message(dialler::listener_client_ptr /*i*/,
+                      std::vector<dialler::message_ptr> & /*d*/,
                       bool & /*cancel*/) override {}
 
   void on_disconnect(const dialler::listener_client_ptr & /*i*/) override {
     connections.fetch_sub(1);
   }
 
-  std::atomic_int16_t connections = 0;
+  std::atomic_int16_t connections;
 };
 
-struct Connection : public dialler::abstract_dial {
+struct Connection final : public dialler::abstract_dial {
   void on_connect() override { mock_is_connected = true; };
-  void on_new_message(dialler::message_ptr &&, bool &) override {}
-  void on_network_error(const dialler::message_ptr &,
-                        const boost::system::error_code &err) override {
-    bool isError = err == boost::asio::error::operation_aborted ||
-                   err == boost::asio::error::connection_reset ||
-                   err == boost::asio::error::eof;
+  void on_new_message(std::vector<dialler::message_ptr> &, bool &) override {}
+  void on_network_error(const boost::system::error_code &err) override {
+    bool isError = err == boost::asio::error::operation_aborted
+        || err == boost::asio::error::connection_reset || err == boost::asio::error::eof;
     if (isError && !is_stoped()) {
       auto msg = err.message();
       EXPECT_FALSE(true);
