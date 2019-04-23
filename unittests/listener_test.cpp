@@ -21,11 +21,10 @@ struct Listener final : public dialler::abstract_listener_consumer {
   }
 
   void on_network_error(dialler::listener_client_ptr /*i*/,
-                        const dialler::message_ptr & /*d*/,
                         const boost::system::error_code & /*err*/) override {}
 
   void on_new_message(dialler::listener_client_ptr /*i*/,
-                      dialler::message_ptr && /*d*/,
+                      std::vector<dialler::message_ptr> & /*d*/,
                       bool & /*cancel*/) override {}
 
   void on_disconnect(const dialler::listener_client_ptr & /*i*/) override {
@@ -37,9 +36,8 @@ struct Listener final : public dialler::abstract_listener_consumer {
 
 struct Connection final : public dialler::abstract_dial {
   void on_connect() override { mock_is_connected = true; };
-  void on_new_message(dialler::message_ptr &&, bool &) override {}
-  void on_network_error(const dialler::message_ptr &,
-                        const boost::system::error_code &err) override {
+  void on_new_message(std::vector<dialler::message_ptr> &, bool &) override {}
+  void on_network_error(const boost::system::error_code &err) override {
     bool isError = err == boost::asio::error::operation_aborted
         || err == boost::asio::error::connection_reset || err == boost::asio::error::eof;
     if (isError && !is_stoped()) {
@@ -99,7 +97,7 @@ TEST_CASE("listener.client", "[network]") {
   for (size_t i = 0; i < clients_count; i++) {
     clients[i] = std::make_shared<dialler::dial>(context, p);
     consumers[i] = std::make_shared<Connection>();
-    clients[i]->add_consumer(consumers[i].get());
+    clients[i]->add_consumer(consumers[i]);
     clients[i]->start_async_connection();
   }
 

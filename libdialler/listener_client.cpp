@@ -1,7 +1,7 @@
-#include <libdialler/listener.h>
-#include <libdialler/listener_client.h>
 #include <boost/asio.hpp>
 #include <functional>
+#include <libdialler/listener.h>
+#include <libdialler/listener_client.h>
 #include <string>
 
 using namespace boost::asio;
@@ -23,12 +23,12 @@ void listener_client::start() {
   initialisation_begin();
   auto self = shared_from_this();
 
-  async_io::data_handler_t on_d = [self](message_ptr &&d, bool &cancel) {
-    self->on_data_recv(std::move(d), cancel);
+  async_io::data_handler_t on_d = [self](std::vector<message_ptr> &d, bool &cancel) {
+    self->on_data_recv(d, cancel);
   };
 
-  async_io::error_handler_t on_n = [self](auto d, auto err) {
-    self->on_network_error(d, err);
+  async_io::error_handler_t on_n = [self](auto err) {
+    self->on_network_error(err);
     self->close();
   };
 
@@ -47,15 +47,18 @@ void listener_client::close() {
   }
 }
 
-void listener_client::on_network_error(const message_ptr &d,
-                                       const boost::system::error_code &err) {
-  this->_listener->on_network_error(this->shared_from_this(), d, err);
+void listener_client::on_network_error(const boost::system::error_code &err) {
+  this->_listener->on_network_error(this->shared_from_this(), err);
 }
 
-void listener_client::on_data_recv(message_ptr &&d, bool &cancel) {
-  _listener->on_new_message(this->shared_from_this(), std::move(d), cancel);
+void listener_client::on_data_recv(std::vector<message_ptr> &d, bool &cancel) {
+  _listener->on_new_message(this->shared_from_this(), d, cancel);
 }
 
 void listener_client::send_data(const message_ptr &d) {
+  _async_connection->send(d);
+}
+
+void listener_client::send_data(const std::vector<message_ptr> &d) {
   _async_connection->send(d);
 }
