@@ -1,9 +1,9 @@
 #pragma once
 
 #include <libdialler/async_io.h>
-#include <libdialler/exports.h>
 #include <libdialler/initialized_resource.h>
 #include <libdialler/listener_client.h>
+#include <libdialler/exports.h>
 
 #include <atomic>
 #include <mutex>
@@ -17,16 +17,18 @@ public:
   EXPORT virtual ~abstract_listener_consumer();
 
   virtual void on_network_error(listener_client_ptr i,
-                                const message_ptr &d,
                                 const boost::system::error_code &err)
       = 0;
-  virtual void on_new_message(listener_client_ptr i, message_ptr &&d, bool &cancel) = 0;
+  virtual void on_new_message(listener_client_ptr i,
+                              std::vector<message_ptr>&d,
+                              bool &cancel)
+      = 0;
   virtual bool on_new_connection(listener_client_ptr i) = 0;
   virtual void on_disconnect(const listener_client_ptr &i) = 0;
 
   EXPORT void set_listener(const std::shared_ptr<listener> &lstnr);
-  EXPORT bool is_listener_exists() const { return _lstnr != nullptr; }
-  EXPORT void send_to(uint64_t id, message_ptr &d);
+  [[nodiscard]] EXPORT bool is_listener_exists() const { return _lstnr != nullptr; }
+  EXPORT void send_to(uint64_t id, message_ptr d);
   EXPORT void stop();
 
 private:
@@ -49,10 +51,10 @@ public:
   EXPORT void start();
   EXPORT void stop();
 
-  EXPORT void send_to(listener_client_ptr i, message_ptr &d);
-  EXPORT void send_to(uint64_t id, message_ptr &d);
+  EXPORT void send_to(listener_client_ptr i, message_ptr d);
+  EXPORT void send_to(uint64_t id, message_ptr d);
 
-  EXPORT boost::asio::io_context *context() const { return _context; }
+  [[nodiscard]] EXPORT boost::asio::io_context *context() const { return _context; }
 
   EXPORT void erase_client_description(const listener_client_ptr client);
   EXPORT void add_consumer(const abstract_listener_consumer_ptr &c);
@@ -63,9 +65,10 @@ public:
 
 protected:
   void on_network_error(listener_client_ptr i,
-                        const message_ptr &d,
                         const boost::system::error_code &err);
-  void on_new_message(listener_client_ptr i, message_ptr &&d, bool &cancel);
+  void on_new_message(listener_client_ptr i,
+                      std::vector<message_ptr>&d,
+                      bool &cancel);
 
 private:
   void start_async_accept(async_io_ptr aio);

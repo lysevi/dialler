@@ -1,5 +1,4 @@
 #include <libdialler/async_io.h>
-
 #include <cassert>
 #include <exception>
 
@@ -33,7 +32,6 @@ void async_io::start(data_handler_t onRecv, error_handler_t onErr) {
 void async_io::fullStop(bool waitAllmessages) {
   _begin_stoping_flag = true;
   try {
-
     if (_sock.is_open()) {
       if (waitAllmessages && _messages_to_send.load() != 0) {
         auto self = this->shared_from_this();
@@ -61,6 +59,7 @@ void async_io::fullStop(bool waitAllmessages) {
             //#endif
           }
         }
+        _recv_message_pool.clear();
         _context = nullptr;
         _is_stoped = true;
       }
@@ -71,6 +70,7 @@ void async_io::fullStop(bool waitAllmessages) {
 }
 
 void async_io::send(const message_ptr d) {
+  std::lock_guard l(_send_locker);
   if (_begin_stoping_flag) {
     return;
   }
@@ -83,7 +83,7 @@ void async_io::send(const message_ptr d) {
 
   auto on_write = [self, d](auto err, auto /*read_bytes*/) {
     if (err) {
-      self->_on_error_handler(d, err);
+      self->_on_error_handler(err);
     }
     self->_messages_to_send.fetch_sub(1);
   };
@@ -91,37 +91,56 @@ void async_io::send(const message_ptr d) {
   async_write(_sock, buf, on_write);
 }
 
+void async_io::send(const std::vector<message_ptr> &d) {
+  std::lock_guard l(_send_locker);
+  for (auto &v : d) {
+    if (_begin_stoping_flag) {
+      return;
+    }
+    send(v);
+  }
+}
+
 void async_io::readNextAsync() {
   auto self = shared_from_this();
 
-  auto on_read_message
-      = [self](auto err, auto read_bytes, auto data_left, message_ptr d) {
-          if (err) {
-            self->_on_error_handler(d, err);
-          } else {
-            assert(read_bytes == data_left);
-            bool cancel_flag = false;
-            try {
-              self->_on_recv_hadler(std::move(d), cancel_flag);
-            } catch (std::exception &ex) {
-              throw std::logic_error(
-                  std::string("exception on async readNextAsync::on_read_message. - ")
-                  + ex.what());
-            }
-            if (!cancel_flag) {
-              self->readNextAsync();
-            }
-          }
-        };
+  auto on_read_message = [self](
+                             auto err, auto read_bytes, auto data_left, message_ptr d) {
+    (void)(data_left);
+    (void)(read_bytes);
+    if (err) {
+      self->_on_error_handler(err);
+      self->_recv_message_pool.clear();
+    } else {
+      assert(read_bytes == data_left);
+      self->_recv_message_pool.push_back(d);
+      auto hdr = d->get_header();
+      bool cancel_flag = false;
+      if (hdr->is_single_message() || hdr->is_end_block) {
+        try {
+          self->_on_recv_hadler(self->_recv_message_pool, cancel_flag);
+        } catch (std::exception &ex) {
+          std::stringstream ss;
+          ss << "exception on async readNextAsync::on_read_message. - " << ex.what();
+          throw std::logic_error(ss.str());
+        }
+        self->_recv_message_pool.clear();
+      }
+      if (!cancel_flag) {
+        self->readNextAsync();
+      }
+    }
+  };
 
   auto on_read_size = [self, on_read_message](auto err, auto read_bytes) {
+    (void)read_bytes;
     if (err) {
-      self->_on_error_handler(nullptr, err);
+      self->_on_error_handler(err);
     } else {
       assert(read_bytes == message::SIZE_OF_SIZE);
 
       auto data_left = self->next_message_size - message::SIZE_OF_SIZE;
-      message_ptr d = std::make_shared<message>(data_left);
+      message_ptr d = std::make_shared<message>(self->next_message_size);
 
       auto buf_ptr = (uint8_t *)(d->get_header());
       auto buf = boost::asio::buffer(buf_ptr, data_left);

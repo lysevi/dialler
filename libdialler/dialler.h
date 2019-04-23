@@ -1,9 +1,9 @@
 #pragma once
 
 #include <libdialler/async_io.h>
-#include <libdialler/exports.h>
 #include <libdialler/initialized_resource.h>
 #include <libdialler/message.h>
+#include <libdialler/exports.h>
 #include <unordered_map>
 
 namespace dialler {
@@ -13,21 +13,20 @@ class abstract_dial {
 public:
   EXPORT virtual ~abstract_dial();
   virtual void on_connect() = 0;
-  virtual void on_new_message(message_ptr &&d, bool &cancel) = 0;
-  virtual void on_network_error(const message_ptr &d,
-                                const boost::system::error_code &err)
-      = 0;
-
-  EXPORT bool is_connected() const;
-  EXPORT bool is_stoped() const;
+  virtual void on_new_message(std::vector<message_ptr>&d, bool &cancel) = 0;
+  virtual void on_network_error(const boost::system::error_code &err) = 0;
+  [[nodiscard]] EXPORT bool is_connected() const;
+  [[nodiscard]] EXPORT bool is_stoped() const;
 
   EXPORT void add_connection(std::shared_ptr<dial> c);
-  EXPORT bool is_connection_exists() const { return _connection != nullptr; }
+  [[nodiscard]] EXPORT bool is_connection_exists() const {
+    return _connection != nullptr;
+  }
 
-private:
+protected:
   std::shared_ptr<dial> _connection;
 };
-using abstract_connection_consumer_ptr = abstract_dial *;
+using abstract_connection_consumer_ptr = std::shared_ptr<abstract_dial>;
 
 class dial final : public std::enable_shared_from_this<dial>,
                    public initialized_resource {
@@ -41,22 +40,22 @@ public:
     unsigned short port;
     bool auto_reconnection = true;
 
-    bool operator==(const params_t &other) const {
+    [[nodiscard]] bool operator==(const params_t &other) const {
       return host == other.host && port == other.port
-          && auto_reconnection == other.auto_reconnection;
+             && auto_reconnection == other.auto_reconnection;
     }
   };
   dial() = delete;
-  params_t get_params() const { return _params; }
+  [[nodiscard]] params_t get_params() const { return _params; }
 
   EXPORT dial(boost::asio::io_context *context, const params_t &_parms);
   EXPORT virtual ~dial();
   EXPORT void disconnect();
   EXPORT void start_async_connection();
-  EXPORT void reconnecton_error(const message_ptr &d,
-                                const boost::system::error_code &err);
-  EXPORT void on_data_receive(message_ptr &&d, bool &cancel);
+  EXPORT void reconnecton_error(const boost::system::error_code &err);
+  EXPORT void on_data_receive(std::vector<message_ptr>&d, bool &cancel);
   EXPORT void send_async(const message_ptr &d);
+  EXPORT void send_async(const std::vector<message_ptr> &d);
 
   EXPORT void add_consumer(const abstract_connection_consumer_ptr &c);
   EXPORT void erase_consumer();

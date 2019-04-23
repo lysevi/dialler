@@ -1,7 +1,7 @@
-#include <libdialler/listener.h>
-#include <libdialler/listener_client.h>
 #include <boost/asio.hpp>
 #include <functional>
+#include <libdialler/listener.h>
+#include <libdialler/listener_client.h>
 #include <string>
 
 using namespace boost::asio;
@@ -17,7 +17,7 @@ void abstract_listener_consumer::set_listener(const std::shared_ptr<listener> &l
   _lstnr = lstnr;
 }
 
-void abstract_listener_consumer::send_to(uint64_t id, message_ptr &d) {
+void abstract_listener_consumer::send_to(uint64_t id, message_ptr d) {
   if (!_lstnr->is_stopping_started()) {
     _lstnr->send_to(id, d);
   }
@@ -83,17 +83,16 @@ void listener::OnAcceptHandler(std::shared_ptr<listener> self,
 
     std::shared_ptr<listener_client> new_client = nullptr;
     {
-      std::lock_guard<std::mutex> lg(self->_locker_connections);
-      new_client = std::make_shared<listener_client>(self->_next_id.load(), aio, self);
-
-      self->_next_id.fetch_add(1);
+      std::lock_guard lg(self->_locker_connections);
+      new_client
+          = std::make_shared<listener_client>(self->_next_id.fetch_add(1), aio, self);
     }
     bool connectionAccepted = false;
     if (self->_consumer != nullptr) {
       connectionAccepted = self->_consumer->on_new_connection(new_client);
     }
     if (true == connectionAccepted) {
-      std::lock_guard<std::mutex> lg(self->_locker_connections);
+      std::lock_guard lg(self->_locker_connections);
       new_client->start();
       self->_connections.push_back(new_client);
     } else {
@@ -118,7 +117,7 @@ void listener::stop() {
     }
 
     auto local_copy = [this]() {
-      std::lock_guard<std::mutex> lg(_locker_connections);
+      std::lock_guard lg(_locker_connections);
       return std::vector<std::shared_ptr<listener_client>>(_connections.begin(),
                                                            _connections.end());
     }();
@@ -155,12 +154,12 @@ void listener::erase_client_description(const listener_client_ptr client) {
   client->stopping_completed();
 }
 
-void listener::send_to(listener_client_ptr i, message_ptr &d) {
+void listener::send_to(listener_client_ptr i, message_ptr d) {
   i->send_data(d);
 }
 
-void listener::send_to(uint64_t id, message_ptr &d) {
-  std::lock_guard<std::mutex> lg(this->_locker_connections);
+void listener::send_to(uint64_t id, message_ptr d) {
+  std::lock_guard lg(this->_locker_connections);
   for (const auto &c : _connections) {
     if (c->get_id() == id) {
       send_to(c, d);
@@ -180,15 +179,16 @@ void listener::erase_consumer() {
 }
 
 void listener::on_network_error(listener_client_ptr i,
-                                const message_ptr &d,
                                 const boost::system::error_code &err) {
   if (_consumer != nullptr) {
-    _consumer->on_network_error(i, d, err);
+    _consumer->on_network_error(i, err);
   }
 }
 
-void listener::on_new_message(listener_client_ptr i, message_ptr &&d, bool &cancel) {
+void listener::on_new_message(listener_client_ptr i,
+                              std::vector<message_ptr> &d,
+                              bool &cancel) {
   if (_consumer != nullptr) {
-    _consumer->on_new_message(i, std::move(d), cancel);
+    _consumer->on_new_message(i, d, cancel);
   }
 }
