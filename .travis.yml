@@ -15,7 +15,7 @@ before_install:
 install: 
   - sudo apt-get install -qq g++-6 cmake
   - sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-6 90
-  - sudo pip3 install conan
+  - sudo pip3 install conan  --user
 
 script: 
   - conan remote add comunity https://api.bintray.com/conan/conan-community/conan 
