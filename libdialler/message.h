@@ -3,6 +3,8 @@
 #include <array>
 #include <cassert>
 #include <cstdint>
+#include <memory>
+
 #include <libdialler/exports.h>
 
 namespace dialler {
