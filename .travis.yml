@@ -25,7 +25,7 @@ script:
   - mkdir build
   - cd build
   - cmake --version
-  - conan install .. --build boost
+  - conan install .. 
   - cmake ..
   - make -C .
   - ctest .
