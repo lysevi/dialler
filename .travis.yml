@@ -24,7 +24,7 @@ script:
   - mkdir build
   - cd build
   - cmake --version
-  - conan install .. --build boost compiler=g++ -s compiler.version=6.5
+  - conan install .. --build boost -s compiler=g++ -s compiler.version=6.5
   - cmake ..
   - make -C .
   - ctest .
