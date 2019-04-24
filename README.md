@@ -1,4 +1,4 @@
-# dialler
+# dialler [![Build Status](https://travis-ci.org/lysevi/dialler.svg?branch=master)](https://travis-ci.org/lysevi/dialler)
 
 boost::asio wrapper
 
