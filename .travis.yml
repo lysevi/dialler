@@ -19,7 +19,8 @@ install:
 
 script: 
   - conan profile new default --detect
-  - conan remote add comunity https://api.bintray.com/conan/conan-community/conan 
+  #- conan remote add comunity https://api.bintray.com/conan/conan-community/conan 
+  - conan remote add bincr https://api.bintray.com/conan/bincrafters/public-conan
   - conan remote list
   - mkdir build
   - cd build
