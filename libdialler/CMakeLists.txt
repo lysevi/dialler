@@ -11,7 +11,7 @@ SET(SRC ${GLOB_HDRS} ${GLOB_SRC})
 add_library(dialler  SHARED ${SRC})
 target_INCLUDE_DIRECTORIES(dialler PUBLIC ${DIALLER_INCLUDE_DIR})
 target_link_libraries(dialler PUBLIC ${DIALLER_PRIVATE_LIBRARIES})
-target_link_directories(dialler PUBLIC ${DIALLER_LIBRARY_DIR})
+link_directories(${DIALLER_LIBRARY_DIR})
 
 SET(DIALLER_LIBRARIES dialler ${DIALLER_PRIVATE_LIBRARIES} CACHE STRING "dialler libs")
 
