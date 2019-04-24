@@ -9,7 +9,7 @@ before_install:
 install: 
   - sudo apt-get install -qq g++-6 cmake
   - sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-6 90
-  - pip install conan
+  - sudo pip install conan
 
 script: 
   - conan remote add comunity https://api.bintray.com/conan/conan-community/conan 
