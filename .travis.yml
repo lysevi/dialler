@@ -18,7 +18,7 @@ install:
   - sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-6 90
 
 script: 
-  - conan profile new default --detect
+  #- conan profile new default --detect
   - conan remote add comunity https://api.bintray.com/conan/conan-community/conan 
   - conan remote list
   - mkdir build
