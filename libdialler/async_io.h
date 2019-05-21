@@ -2,6 +2,7 @@
 
 #include <boost/asio.hpp>
 #include <libdialler/message.h>
+#include <libdialler/exports.h>
 
 #include <atomic>
 #include <functional>
@@ -22,14 +23,15 @@ public:
   EXPORT void send(const message_ptr d);
   EXPORT void send(const std::vector<message_ptr> &d);
   EXPORT void start(data_handler_t onRecv, error_handler_t onErr);
-  EXPORT void fullStop(bool waitAllMessages = false); /// stop thread, clean queue
+  EXPORT void full_stop(); /// stop thread, clean queue
 
   [[nodiscard]] int queueSize() const { return _messages_to_send; }
   [[nodiscard]] boost::asio::ip::tcp::socket &socket() { return _sock; }
 
 private:
-  void readNextAsync();
-
+  void read_next_async();
+  void on_read_message(boost::system::error_code ecode, size_t readed_bytes);
+  void on_read_size(boost::system::error_code err, size_t readed_bytes);
 private:
   std::recursive_mutex _send_locker;
   std::atomic_int _messages_to_send;
@@ -40,6 +42,7 @@ private:
   bool _is_stoped;
   std::atomic_bool _begin_stoping_flag;
   message::size_t next_message_size;
+  message_ptr next_message;
 
   data_handler_t _on_recv_hadler;
   error_handler_t _on_error_handler;

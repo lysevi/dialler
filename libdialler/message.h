@@ -4,13 +4,15 @@
 #include <cassert>
 #include <cstdint>
 #include <memory>
+#include <vector>
+#include <cstring>
 
 #include <libdialler/exports.h>
 
 namespace dialler {
 struct buffer {
   size_t size;
-  uint8_t *data;
+  std::vector<uint8_t> data;
 };
 
 #pragma pack(push, 1)
@@ -36,7 +38,7 @@ public:
   static const size_t SIZE_OF_HEADER = sizeof(header_t);
   static const size_t MAX_BUFFER_SIZE = MAX_MESSAGE_SIZE - SIZE_OF_HEADER - SIZE_OF_SIZE;
 
-  message(message &&other)
+  message(message &&other) noexcept
       : _data(std::move(other._data)) {
     _size = (size_t *)_data.data();
     *_size = *other._size;
@@ -48,9 +50,10 @@ public:
     *_size = *other._size;
   }
 
-  message(size_t sz) { init_for_size(sz); }
+  message(size_t sz):_data() { init_for_size(sz); }
 
-  message(size_t sz, const kind_t &kind_) {
+  message(size_t sz, const kind_t &kind_)
+      : _data() {
     auto full_size = static_cast<size_t>(sz + SIZE_OF_SIZE + SIZE_OF_HEADER);
     assert(full_size <= MAX_MESSAGE_SIZE);
     init_for_size(full_size);
@@ -70,8 +73,11 @@ public:
   [[nodiscard]] buffer as_buffer() {
     uint8_t *v = reinterpret_cast<uint8_t *>(_data.data());
     auto buf_size = *_size;
-    return buffer{buf_size, v};
+    std::vector<uint8_t> d(buf_size);
+    std::memcpy(d.data(), v, buf_size);
+    return buffer{buf_size, d};
   }
+
   [[nodiscard]] header_t *get_header() {
     return reinterpret_cast<header_t *>(this->_data.data() + SIZE_OF_SIZE);
   }

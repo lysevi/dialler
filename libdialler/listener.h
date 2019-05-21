@@ -20,9 +20,8 @@ public:
   virtual void on_network_error(listener_client_ptr i,
                                 const boost::system::error_code &err)
       = 0;
-  virtual void on_new_message(listener_client_ptr i,
-                              std::vector<message_ptr>&d,
-                              bool &cancel)
+  virtual void
+  on_new_message(listener_client_ptr i, std::vector<message_ptr> &d, bool &cancel)
       = 0;
   virtual bool on_new_connection(listener_client_ptr i) = 0;
   virtual void on_disconnect(const listener_client_ptr &i) = 0;
@@ -65,22 +64,18 @@ public:
   friend listener_client;
 
 protected:
-  void on_network_error(listener_client_ptr i,
-                        const boost::system::error_code &err);
-  void on_new_message(listener_client_ptr i,
-                      std::vector<message_ptr>&d,
-                      bool &cancel);
+  void on_network_error(listener_client_ptr i, const boost::system::error_code &err);
+  void on_new_message(listener_client_ptr i, std::vector<message_ptr> &d, bool &cancel);
 
 private:
-  void start_async_accept(async_io_ptr aio);
+  void start_async_accept();
 
-  EXPORT static void OnAcceptHandler(std::shared_ptr<listener> self,
-                                     async_io_ptr aio,
-                                     const boost::system::error_code &err);
+  EXPORT void on_accept_handler(const boost::system::error_code &err);
 
 protected:
   boost::asio::io_context *_context = nullptr;
   std::shared_ptr<boost::asio::ip::tcp::acceptor> _acc = nullptr;
+  std::shared_ptr<async_io> _aio = nullptr;
   std::atomic_int _next_id;
 
   abstract_listener_consumer_ptr _consumer;

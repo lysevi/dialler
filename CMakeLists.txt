@@ -1,6 +1,6 @@
 cmake_minimum_required (VERSION 3.1)
 set(PROJECT "dialler")
-project (${PROJECT} VERSION 0.0.2)
+project (${PROJECT} VERSION 0.0.3)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -56,6 +56,7 @@ IF(NOT HEADER_ONLY)
 	endif()
 endif()
 
+add_definitions(-DBOOST_ASIO_NO_DEPRECATED)
 find_package(Boost 1.69.0 COMPONENTS system date_time REQUIRED)
 
 IF(Boost_FOUND)
@@ -63,6 +64,11 @@ else()
   MESSAGE(FATAL_ERROR "boost not found")
   EXIT()
 ENDIF()
+
+#### catch2
+if(dialler_ENABLE_TESTS)
+   include_directories(extern/Catch2/single_include/catch2/)
+endif(dialler_ENABLE_TESTS)
 
 ##### THREADS
 find_package (Threads)

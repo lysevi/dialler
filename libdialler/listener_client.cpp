@@ -9,15 +9,15 @@ using namespace boost::asio::ip;
 
 using namespace dialler;
 
-listener_client::listener_client(uint64_t id_,
-                                 async_io_ptr async_io,
-                                 std::shared_ptr<listener> s)
+listener_client::listener_client(uint64_t id_, async_io_ptr async_io, listener *s)
     : id(id_)
     , _listener(s) {
   _async_connection = async_io;
 }
 
-listener_client::~listener_client() {}
+listener_client::~listener_client() {
+  _async_connection = nullptr;
+}
 
 void listener_client::start() {
   initialisation_begin();
@@ -40,7 +40,7 @@ void listener_client::close() {
   if (!is_stopping_started() && !is_stoped()) {
     stopping_started(true);
     if (_async_connection != nullptr) {
-      _async_connection->fullStop();
+      _async_connection->full_stop();
       _async_connection = nullptr;
       this->_listener->erase_client_description(this->shared_from_this());
     }
